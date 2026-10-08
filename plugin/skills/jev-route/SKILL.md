@@ -10,7 +10,7 @@ allowed-tools: Bash
 This makes one Jev call and no Claude call. It uses the locally installed `jev-opus` when there is one, otherwise the version pinned in this skill (never `@latest`):
 
 ```bash
-jev() { if command -v jev-opus >/dev/null 2>&1; then jev-opus "$@"; else npx -y github:abby-inc/jev-opus#v0.5.0-abby.0 "$@"; fi; }
+jev() { if command -v jev-opus >/dev/null 2>&1; then jev-opus "$@"; else npx -y github:abby-inc/jev-opus#v0.5.0-abby.1 "$@"; fi; }
 jev --route-only <<'JEV_TASK'
 $ARGUMENTS
 JEV_TASK
