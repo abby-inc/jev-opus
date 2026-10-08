@@ -11,10 +11,11 @@ jev-opus runs the task in a **separate** Claude Code process on `claude-opus-5-5
 
 ## Run it
 
-Pass the task through a quoted heredoc, so no quoting in the task can break the command. Run it from the user's project directory, **in the background** (tasks can take many minutes), and wait for it to finish:
+The `jev` function runs the locally installed `jev-opus` when there is one, otherwise the exact version pinned below (never `@latest`). Pass the task through a quoted heredoc, so no quoting in the task can break the command. Run it from the user's project directory, **in the background** (tasks can take many minutes), and wait for it to finish:
 
 ```bash
-npx -y jev-opus@latest --permission-mode auto -w "$PWD" <<'JEV_TASK'
+jev() { if command -v jev-opus >/dev/null 2>&1; then jev-opus "$@"; else npx -y github:abby-inc/jev-opus#v0.5.0-abby.0 "$@"; fi; }
+jev --permission-mode auto -w "$PWD" <<'JEV_TASK'
 $ARGUMENTS
 JEV_TASK
 ```
@@ -34,7 +35,7 @@ Do not redo or re-verify the work yourself unless the user asks.
 
 ## If it fails
 
-- `JEV_API_KEY not set`: the run still works, using local heuristics. Tell the user to run `npx -y jev-opus@latest init` to add their TypeSafe Jev key.
+- `JEV_API_KEY not set`: the run still works, using local heuristics. Tell the user to run `jev-opus init` to add their TypeSafe Jev key.
 - `Not logged in`, or an authentication error: the user needs to run `claude auth login`, or set `ANTHROPIC_API_KEY` in `~/.config/jev-opus/.env`.
 - Node older than 22.18: jev-opus needs Node ≥ 22.18.
-- Anything else: show the error and suggest `npx -y jev-opus@latest doctor`.
+- Anything else: show the error and suggest `jev-opus doctor`.

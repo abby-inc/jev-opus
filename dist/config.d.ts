@@ -40,7 +40,10 @@ export declare function resolveClaudeCredentials(env: NodeJS.ProcessEnv, fileVar
 }>, opts?: {
     inherit?: boolean;
 }): ClaudeCredentials;
+/** `shadow` asks Jev and journals the decision but never touches the request; null for an unrecognised value. */
+export declare function parseMode(raw: string | undefined): 'active' | 'shadow' | null;
 export declare const config: {
+    mode: string | undefined;
     model: string;
     claudePath: string | undefined;
     minEffort: import("@anthropic-ai/claude-agent-sdk").EffortLevel;

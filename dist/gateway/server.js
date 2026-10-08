@@ -155,16 +155,22 @@ export class JevGateway {
                 this.opts.onNotice?.(`debug headers=${hdrs}`);
                 this.opts.onNotice?.(`debug ${pathname} model=${String(parsed.model)} messages=${msgs} tools=${tools} session=${headers['x-claude-code-session-id'] ?? '-'} agent=${headers['x-claude-code-agent-id'] ?? '-'} top=${JSON.stringify(parsed.output_config ?? null)} beta=${headers['anthropic-beta'] ?? ''} :: ${shape}`);
             }
-            if (parsed && isJevModel(parsed.model)) {
-                parsed.model = stripJevModel(parsed.model);
+            const shadow = this.opts.shadow === true;
+            if (parsed && (shadow || isJevModel(parsed.model))) {
+                // Shadow observes every model but forwards the original bytes; only the jev/ alias has to be rewritten.
+                const aliased = isJevModel(parsed.model);
+                if (isJevModel(parsed.model))
+                    parsed.model = stripJevModel(parsed.model);
                 if (pathname === '/v1/messages' && Array.isArray(parsed.messages) && Array.isArray(parsed.tools) && parsed.tools.length > 0) {
                     const routed = await this.route(headers, parsed);
-                    parsed.messages = routed.messages;
-                    if (routed.decisionId && routed.key && routed.decision)
-                        telem = { key: routed.key, decisionId: routed.decisionId, attemptId: randomUUID(), decision: routed.decision, session: headers['x-claude-code-session-id'] ?? 'no-session', agent: headers['x-claude-code-agent-id'] ?? 'main' };
-                    headers['anthropic-beta'] = addBeta(headers['anthropic-beta']);
+                    if (!shadow) {
+                        parsed.messages = routed.messages;
+                        if (routed.decisionId && routed.key && routed.decision)
+                            telem = { key: routed.key, decisionId: routed.decisionId, attemptId: randomUUID(), decision: routed.decision, session: headers['x-claude-code-session-id'] ?? 'no-session', agent: headers['x-claude-code-agent-id'] ?? 'main' };
+                        headers['anthropic-beta'] = addBeta(headers['anthropic-beta']);
+                    }
                 }
-                else if (Array.isArray(parsed.messages)) {
+                else if (!shadow && Array.isArray(parsed.messages)) {
                     // Token counting and tool-less side requests must see the same
                     // transcript the generation did, but never decide anything.
                     const replayed = this.replayOnly(headers, parsed.messages);
@@ -173,7 +179,8 @@ export class JevGateway {
                         headers['anthropic-beta'] = addBeta(headers['anthropic-beta']);
                     }
                 }
-                body = Buffer.from(JSON.stringify(parsed));
+                if (!shadow || aliased)
+                    body = Buffer.from(JSON.stringify(parsed));
             }
             else if (parsed && pathname === '/v1/messages' && Array.isArray(parsed.tools) && parsed.tools.length > 0) {
                 // Model switches must not label the next model's responses with a stale Jev decision.
@@ -402,7 +409,7 @@ export class JevGateway {
         // State the level right before the user turn it governs. If Claude Code's own statement trails that turn,
         // restate ours after it too, so ours is the last word however the API orders trailing statements.
         const clientChoseThisTurn = client !== null && client.index > lastUser;
-        if (decision.effort !== current || (clientChoseThisTurn && decision.effort !== client.effort)) {
+        if (!this.opts.shadow && (decision.effort !== current || (clientChoseThisTurn && decision.effort !== client.effort))) {
             t.insertions.push({ index: lastUser, effort: decision.effort, prefixHash: hashes[lastUser] });
             if (clientChoseThisTurn)
                 t.insertions.push({ index: messages.length, effort: decision.effort, prefixHash: hashes[messages.length] });

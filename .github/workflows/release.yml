@@ -1,30 +1,34 @@
 name: release
-# Push a tag like v0.3.0 (matching package.json) to publish to npm and create a GitHub release.
+# Every push to main whose package.json version has no v<version> tag yet gets that tag and a GitHub release,
+# with the notes taken from the matching CHANGELOG.md section. npm publishing is deliberately not done here.
 on:
   push:
-    tags: ['v*']
+    branches: [main]
 permissions:
-  contents: write   # create the GitHub release
-  id-token: write   # npm trusted publishing (OIDC) + provenance
+  contents: write   # create the tag and the GitHub release
 jobs:
-  publish:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
+          cache: npm
       - run: npm ci
+      - run: npm run check:version
       - run: npm run typecheck && npm test
-      - name: tag matches package.json
-        run: test "v$(npm pkg get version | tr -d '"')" = "${GITHUB_REF_NAME}"
       - name: dist/ is up to date
         run: npm run build && git diff --exit-code -- dist
-      - name: publish to npm (skipped if this version is already published)
-        run: |
-          if npm view "jev-opus@${GITHUB_REF_NAME#v}" version >/dev/null 2>&1; then echo "already on npm"; else npm publish --provenance --access public; fi
-      - name: GitHub release (skipped if it exists)
-        run: gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag
+      - name: tag and GitHub release (skipped if the version is already released)
         env:
           GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          tag="v${version}"
+          if gh release view "$tag" >/dev/null 2>&1; then echo "$tag already released"; exit 0; fi
+          awk -v v="$version" '/^## /{p = ($2 == v)} p' CHANGELOG.md > notes.md
+          test -s notes.md
+          flags=()
+          case "$version" in *-*) flags+=(--prerelease) ;; esac
+          gh release create "$tag" --target "$GITHUB_SHA" --title "$tag" --notes-file notes.md "${flags[@]}"

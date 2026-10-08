@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { childEnv } from '../claude/env.ts';
-import { CONFIG_DIR, config } from '../config.ts';
+import { CONFIG_DIR, config, parseMode } from '../config.ts';
 import type { JevLike } from '../jev/client.ts';
 import type { Bounds } from '../router/policy.ts';
 import { formatDecision } from '../ui.ts';
@@ -42,7 +42,7 @@ export function logToGateway(line: string): void {
   appendLog(line);
 }
 
-export function createGateway(jev: JevLike | null, bounds: Bounds, opts: { port?: number; echo?: boolean; quiet?: boolean; trace?: (e: Record<string, unknown>) => void } = {}): JevGateway {
+export function createGateway(jev: JevLike | null, bounds: Bounds, opts: { port?: number; echo?: boolean; quiet?: boolean; shadow?: boolean; trace?: (e: Record<string, unknown>) => void } = {}): JevGateway {
   return new JevGateway({
     jev,
     bounds,
@@ -51,8 +51,9 @@ export function createGateway(jev: JevLike | null, bounds: Bounds, opts: { port?
     journalDir: JOURNAL_DIR,
     upstream: process.env.JEV_GATEWAY_UPSTREAM || undefined,
     trace: opts.trace,
+    shadow: opts.shadow,
     onDecision: (session, d) => {
-      const line = `[${session.slice(0, 8)}] ${formatDecision(d, false)}`;
+      const line = `${opts.shadow ? '[shadow] ' : ''}[${session.slice(0, 8)}] ${formatDecision(d, false)}`;
       appendLog(line);
       if (opts.echo) console.log(line);
     },
@@ -131,10 +132,16 @@ export function resolveClaude(explicit: string | undefined, env: Record<string, 
 }
 
 export async function launchClaude(jev: JevLike | null, bounds: Bounds, claudeArgs: string[], trace?: (e: Record<string, unknown>) => void): Promise<number> {
-  const gateway = createGateway(jev, bounds, { trace, quiet: true });
+  const mode = parseMode(config.mode);
+  if (!mode) {
+    console.error(`jev-opus: JEV_OPUS_MODE must be "active" or "shadow", got "${config.mode}"`);
+    return 1;
+  }
+  const shadow = mode === 'shadow';
+  const gateway = createGateway(jev, bounds, { trace, quiet: true, shadow });
   const baseUrl = await gateway.listen();
 
-  const { env } = childEnv(process.env, { connectors: true });
+  const { env } = childEnv(process.env, { connectors: true, passthrough: true, shadow });
   Object.assign(env, gatewayClientEnv(baseUrl, gateway.authToken));
 
   try {
@@ -142,12 +149,14 @@ export async function launchClaude(jev: JevLike | null, bounds: Bounds, claudeAr
     const quote = (s: string) => `'${s.replaceAll("'", "'\\''")}'`;
     const command = `${quote(process.execPath)} ${quote(cli)} statusline`;
     // Opus 5.5 turns most mid-task notes into hidden progress blocks, so narration is opt-in.
-    const base = process.env.JEV_OPUS_NARRATION === '1' ? withNarration(claudeArgs) : [...claudeArgs];
+    const base = !shadow && process.env.JEV_OPUS_NARRATION === '1' ? withNarration(claudeArgs) : [...claudeArgs];
     const args = withGatewaySettings(base, {
-      ...(process.env.JEV_OPUS_NO_INLINE_EFFORT === '1' ? {} : inlineEffortSettings(baseUrl + gateway.displayHookPath, { toolNotices: process.env.JEV_OPUS_TOOL_NOTICES !== '0' })),
-      ...(process.env.JEV_OPUS_NO_STATUSLINE === '1' ? {} : { statusLine: { type: 'command' as const, command } }),
+      ...(shadow || process.env.JEV_OPUS_NO_INLINE_EFFORT === '1' ? {} : inlineEffortSettings(baseUrl + gateway.displayHookPath, { toolNotices: process.env.JEV_OPUS_TOOL_NOTICES !== '0' })),
+      ...(shadow || process.env.JEV_OPUS_NO_STATUSLINE === '1' ? {} : { statusLine: { type: 'command' as const, command } }),
     });
-    if (!args.some((a) => a === '--model' || a.startsWith('--model='))) args.unshift('--model', JEV_MODEL_ID);
+    // A model the user chose (`--model`) is never replaced; shadow leaves the model alone entirely.
+    if (!shadow && !args.some((a) => a === '--model' || a.startsWith('--model='))) args.unshift('--model', JEV_MODEL_ID);
+    if (shadow) console.error('jev-opus: shadow mode, Jev decisions are logged to gateway.log and the journal; requests are forwarded unchanged.');
 
     const found = resolveClaude(config.claudePath, env);
     if (!found.ok) {
