@@ -7,14 +7,15 @@ allowed-tools: Bash
 
 # Ask Jev for an effort decision
 
-This makes one Jev call and no Claude call:
+This makes one Jev call and no Claude call. It uses the locally installed `jev-opus` when there is one, otherwise the version pinned in this skill (never `@latest`):
 
 ```bash
-npx -y jev-opus@latest --route-only <<'JEV_TASK'
+jev() { if command -v jev-opus >/dev/null 2>&1; then jev-opus "$@"; else npx -y github:abby-inc/jev-opus#v0.5.0-abby.0 "$@"; fi; }
+jev --route-only <<'JEV_TASK'
 $ARGUMENTS
 JEV_TASK
 ```
 
 Report the task type, difficulty, stakes, the chosen effort, and the reasons line. If `$ARGUMENTS` is empty, ask the user which task to classify.
 
-If Jev isn't configured, the answer comes from local heuristics. Tell the user that, and mention `npx -y jev-opus@latest init`.
+If Jev isn't configured, the answer comes from local heuristics. Tell the user that, and mention `jev-opus init`.

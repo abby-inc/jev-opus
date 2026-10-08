@@ -79,7 +79,13 @@ export function resolveClaudeCredentials(env, fileVars, opts = {}) {
         baseUrl: pick('JEV_OPUS_ANTHROPIC_BASE_URL'),
     };
 }
+/** `shadow` asks Jev and journals the decision but never touches the request; null for an unrecognised value. */
+export function parseMode(raw) {
+    const v = (raw ?? '').trim().toLowerCase();
+    return v === '' || v === 'active' ? 'active' : v === 'shadow' ? 'shadow' : null;
+}
 export const config = {
+    mode: process.env.JEV_OPUS_MODE,
     model: process.env.JEV_OPUS_MODEL || 'claude-opus-5-5',
     claudePath: process.env.JEV_OPUS_CLAUDE_PATH || undefined,
     minEffort: envEffort('JEV_OPUS_MIN_EFFORT', 'low'),

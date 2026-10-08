@@ -1,13 +1,13 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "jev-opus",
-  "version": "0.4.8",
+  "version": "0.5.0-abby.0",
   "description": "Hand tasks to Claude Opus 5.5 with the effort level re-picked every step by the TypeSafe Jev reflex, cache-safe",
   "author": {
-    "name": "WXK-AI"
+    "name": "WXK-AI (upstream), maintained by abby-inc"
   },
-  "homepage": "https://github.com/WXK-AI/jev-opus",
-  "repository": "https://github.com/WXK-AI/jev-opus",
+  "homepage": "https://github.com/abby-inc/jev-opus",
+  "repository": "https://github.com/abby-inc/jev-opus",
   "license": "MIT",
   "keywords": [
     "effort",

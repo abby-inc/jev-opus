@@ -265,6 +265,7 @@ async function init() {
         '# JEV_OPUS_MODEL=claude-opus-5-5',
         '# JEV_OPUS_MIN_EFFORT=low',
         '# JEV_OPUS_MAX_EFFORT=high',
+        '# JEV_OPUS_MODE=shadow   # `jev-opus claude` asks Jev and logs, but forwards requests unchanged',
         '',
     ].join('\n'), { mode: 0o600 });
     console.log(`wrote ${CONFIG_ENV_FILE}${key ? '' : ' (add JEV_API_KEY to enable Jev routing)'}\nnext: jev-opus doctor`);

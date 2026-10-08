@@ -16,6 +16,7 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
+      - run: npm run check:version
       - run: npm run typecheck
       - run: npm test
       - name: dist/ is committed and up to date

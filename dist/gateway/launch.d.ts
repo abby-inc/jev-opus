@@ -13,6 +13,7 @@ export declare function createGateway(jev: JevLike | null, bounds: Bounds, opts?
     port?: number;
     echo?: boolean;
     quiet?: boolean;
+    shadow?: boolean;
     trace?: (e: Record<string, unknown>) => void;
 }): JevGateway;
 /** `jev-opus claude [claude args…]`: gateway in-process + the normal interactive Claude Code on top of it. */

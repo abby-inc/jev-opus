@@ -1,5 +1,32 @@
 <h1 align="center"><img src="assets/banner.svg" width="860" alt="jev-opus: Claude Opus 5.5 with effort re-picked by Jev at every step (medium, then high after a failing test, back to medium once it passes) over one unbroken prompt cache"></h1>
 
+## Abby fork
+
+This is the [abby-inc](https://github.com/abby-inc/jev-opus) fork of [WXK-AI/jev-opus](https://github.com/WXK-AI/jev-opus) (MIT, based on 0.4.8). The gateway, the Jev routing and the cache-safe replay are WXK-AI's work. The fork changes four things so it can sit under a daily-driver Claude Code:
+
+1. **Environment kept.** `jev-opus claude` passes your environment through (`CLAUDE_CODE_*`, `OTEL_*`, `MCP_*`, ...). Only credentials, `ANTHROPIC_BASE_URL`, `CLAUDE_CODE_EFFORT_LEVEL`, other-provider switches and parent-session markers are removed, because those would bypass the gateway or override Jev.
+2. **Shadow mode.** `JEV_OPUS_MODE=shadow` asks Jev and journals each decision (`~/.config/jev-opus/gateway.log`, the journal and `jev-opus audit`) while forwarding every request byte-for-byte. Start here to see what Jev would do before letting it act.
+3. **Ceiling `high`.** `xhigh` and `max` are reachable only with an explicit `JEV_OPUS_MAX_EFFORT`.
+4. **Pinned skills.** The plugin skills run your local `jev-opus`, else an exact pinned version, never `npx jev-opus@latest`.
+
+Your own `--model` is never replaced and all other CLI arguments go to Claude Code. Without `--model`, `jev-opus claude` selects the "Opus 5.5 · Jev" model; with another model there is no routing (shadow mode still observes it).
+
+Install from source (no npm release of the fork yet):
+
+```bash
+git clone https://github.com/abby-inc/jev-opus && cd jev-opus && git checkout v0.5.0-abby.0
+npm ci && npm link        # puts `jev-opus` on your PATH; `dist/` is committed, no build needed
+jev-opus init             # add your Jev key
+echo "alias cj='jev-opus claude'" >> ~/.zshrc   # a short launcher for cmux terminals
+JEV_OPUS_MODE=shadow cj   # recommended first run: observe only
+cj                        # then, active routing (ceiling: high)
+```
+
+Or without cloning: `npx -y github:abby-inc/jev-opus#v0.5.0-abby.0 claude`.
+
+---
+
+
 **Claude Opus 5.5 with the effort level re-decided at every step, without breaking the prompt cache.**
 
 [![npm](https://img.shields.io/npm/v/jev-opus)](https://www.npmjs.com/package/jev-opus) [![ci](https://github.com/WXK-AI/jev-opus/actions/workflows/ci.yml/badge.svg)](https://github.com/WXK-AI/jev-opus/actions/workflows/ci.yml)
@@ -172,7 +199,7 @@ Every run writes a JSONL trace to `~/.config/jev-opus/traces/`.
 The repo is also a plugin marketplace. In Claude Code (CLI or desktop app):
 
 ```
-/plugin marketplace add WXK-AI/jev-opus
+/plugin marketplace add abby-inc/jev-opus
 /plugin install jev-opus@jev-opus
 ```
 
@@ -238,7 +265,7 @@ A partial last line, which a crash during a write can leave, is skipped when the
 
 ## Credentials and isolation
 
-The Claude Code child process never inherits a parent session's `ANTHROPIC_*` / `CLAUDE_*` variables or the Jev/OpenRouter API keys. That matters when jev-opus is launched from inside Claude Code: without this, it would reuse the parent's token and its pinned `CLAUDE_CODE_EFFORT_LEVEL`. The Claude credential passed to the child is sourced from:
+The headless driver's Claude Code child process never inherits a parent session's `ANTHROPIC_*` / `CLAUDE_*` variables or the Jev/OpenRouter API keys. (`jev-opus claude` is your own Claude Code and keeps your environment; see "Abby fork" above for the short list it removes. Jev/OpenRouter keys are removed in both.) That matters when jev-opus is launched from inside Claude Code: without this, it would reuse the parent's token and its pinned `CLAUDE_CODE_EFFORT_LEVEL`. The Claude credential passed to the child is sourced from:
 - a `JEV_OPUS_ANTHROPIC_API_KEY` / `JEV_OPUS_CLAUDE_OAUTH_TOKEN` setting (passed under Claude's standard credential name), or
 - an `ANTHROPIC_API_KEY` / `CLAUDE_CODE_OAUTH_TOKEN` written in a jev-opus `.env` file, or
 - your `claude` login.

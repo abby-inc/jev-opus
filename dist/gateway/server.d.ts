@@ -35,6 +35,11 @@ export interface GatewayOptions {
     authToken?: string;
     /** Maximum proxied request size; defaults to 64 MiB. */
     maxRequestBytes?: number;
+    /**
+     * Ask Jev for every tool-using request and journal the decision, but forward the request as received:
+     * no effort statement is inserted, so no insertion is ever recorded for replay.
+     */
+    shadow?: boolean;
 }
 export declare const GATEWAY_AUTH_HEADER = "x-jev-gateway-token";
 export declare class JevGateway {

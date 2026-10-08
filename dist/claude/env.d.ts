@@ -6,4 +6,5 @@ export interface ChildEnv {
 export declare function childEnv(base?: NodeJS.ProcessEnv, opts?: {
     connectors?: boolean;
     credentials?: ClaudeCredentials;
+    passthrough?: boolean;
 }): ChildEnv;
