@@ -24,6 +24,8 @@ export function gatewayClientEnv(baseUrl: string, authToken: string): Record<str
     ANTHROPIC_CUSTOM_MODEL_OPTION: JEV_MODEL_ID,
     ANTHROPIC_CUSTOM_MODEL_OPTION_NAME: 'Opus 5.5 · Jev',
     ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION: 'Opus 5.5 with effort re-picked every step by Jev (low/medium/high), cache-safe',
+    // Claude Code turns tool search off behind a non-Anthropic base URL, loading every MCP schema into each prompt.
+    ENABLE_TOOL_SEARCH: 'true',
   };
 }
 
@@ -143,6 +145,7 @@ export async function launchClaude(jev: JevLike | null, bounds: Bounds, claudeAr
 
   const { env } = childEnv(process.env, { connectors: true, passthrough: true, shadow });
   Object.assign(env, gatewayClientEnv(baseUrl, gateway.authToken));
+  if (process.env.ENABLE_TOOL_SEARCH !== undefined) env.ENABLE_TOOL_SEARCH = process.env.ENABLE_TOOL_SEARCH;
 
   try {
     const cli = fileURLToPath(new URL('../cli.' + (import.meta.url.endsWith('.ts') ? 'ts' : 'js'), import.meta.url));
