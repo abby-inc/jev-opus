@@ -14,7 +14,7 @@ jev-opus runs the task in a **separate** Claude Code process on `claude-opus-5-5
 The `jev` function runs the locally installed `jev-opus` when there is one, otherwise the exact version pinned below (never `@latest`). Pass the task through a quoted heredoc, so no quoting in the task can break the command. Run it from the user's project directory, **in the background** (tasks can take many minutes), and wait for it to finish:
 
 ```bash
-jev() { if command -v jev-opus >/dev/null 2>&1; then jev-opus "$@"; else npx -y github:abby-inc/jev-opus#v0.5.0-abby.0 "$@"; fi; }
+jev() { if command -v jev-opus >/dev/null 2>&1; then jev-opus "$@"; else npx -y github:abby-inc/jev-opus#v0.5.0-abby.1 "$@"; fi; }
 jev --permission-mode auto -w "$PWD" <<'JEV_TASK'
 $ARGUMENTS
 JEV_TASK

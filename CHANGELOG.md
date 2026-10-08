@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0-abby.1 - 2026-10-08
+
+- `jev-opus claude` sets `ENABLE_TOOL_SEARCH=true`: Claude Code turns tool search off behind a non-Anthropic `ANTHROPIC_BASE_URL`, so every MCP schema was loaded into each prompt (~47 % of the context at session start). A value already in the environment wins.
+
 ## 0.5.0-abby.0 - 2026-10-08
 
 First release of the abby-inc fork of [WXK-AI/jev-opus](https://github.com/WXK-AI/jev-opus) (MIT), based on upstream 0.4.8. The routing, journal and cache-replay design is entirely WXK-AI's work. The changes below only adapt it to a daily-driver Claude Code setup.

@@ -14,7 +14,7 @@ Your own `--model` is never replaced and all other CLI arguments go to Claude Co
 Install from source (no npm release of the fork yet):
 
 ```bash
-git clone https://github.com/abby-inc/jev-opus && cd jev-opus && git checkout v0.5.0-abby.0
+git clone https://github.com/abby-inc/jev-opus && cd jev-opus && git checkout v0.5.0-abby.1
 npm ci && npm link        # puts `jev-opus` on your PATH; `dist/` is committed, no build needed
 jev-opus init             # add your Jev key
 echo "alias cj='jev-opus claude'" >> ~/.zshrc   # a short launcher for cmux terminals
@@ -22,7 +22,7 @@ JEV_OPUS_MODE=shadow cj   # recommended first run: observe only
 cj                        # then, active routing (ceiling: high)
 ```
 
-Or without cloning: `npx -y github:abby-inc/jev-opus#v0.5.0-abby.0 claude`.
+Or without cloning: `npx -y github:abby-inc/jev-opus#v0.5.0-abby.1 claude`.
 
 ---
 
