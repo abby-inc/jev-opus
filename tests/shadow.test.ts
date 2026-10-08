@@ -207,3 +207,12 @@ test('childEnv without passthrough still strips every ANTHROPIC_*, CLAUDE*, MCP_
   const { env } = childEnv({ CLAUDE_CODE_ENABLE_FUNCTION_HOOKS: '1', OTEL_X: '1', MCP_X: '1', ANTHROPIC_MODEL: 'm', PATH: '/bin' }, { credentials: { apiKey: NO, oauthToken: NO, authToken: NO, baseUrl: NO } });
   assert.deepEqual(Object.keys(env).filter((k) => k !== 'ENABLE_CLAUDEAI_MCP_SERVERS').sort(), ['PATH']);
 });
+
+test('childEnv passthrough keeps CLAUDE_CODE_EFFORT_LEVEL in shadow mode only', () => {
+  const NO = { value: '', source: '' };
+  const credentials = { apiKey: NO, oauthToken: NO, authToken: NO, baseUrl: NO };
+  const base = { CLAUDE_CODE_EFFORT_LEVEL: 'low', PATH: '/bin' };
+  assert.equal(childEnv(base, { passthrough: true, shadow: true, credentials }).env.CLAUDE_CODE_EFFORT_LEVEL, 'low');
+  assert.equal(childEnv(base, { passthrough: true, shadow: false, credentials }).env.CLAUDE_CODE_EFFORT_LEVEL, undefined);
+  assert.equal(childEnv(base, { passthrough: true, credentials }).env.CLAUDE_CODE_EFFORT_LEVEL, undefined);
+});

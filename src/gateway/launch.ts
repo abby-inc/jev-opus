@@ -141,7 +141,7 @@ export async function launchClaude(jev: JevLike | null, bounds: Bounds, claudeAr
   const gateway = createGateway(jev, bounds, { trace, quiet: true, shadow });
   const baseUrl = await gateway.listen();
 
-  const { env } = childEnv(process.env, { connectors: true, passthrough: true });
+  const { env } = childEnv(process.env, { connectors: true, passthrough: true, shadow });
   Object.assign(env, gatewayClientEnv(baseUrl, gateway.authToken));
 
   try {

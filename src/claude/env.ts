@@ -13,7 +13,7 @@ import { config, type ClaudeCredentials } from '../config.ts';
  * `credential` label says which source won.
  *
  * `passthrough` (the wrapped `jev-opus claude` session) is the user's own Claude Code: it keeps the parent
- * environment and drops only PASSTHROUGH_BLOCKED, so CLAUDE_CODE_*, OTEL_* and MCP_* settings still apply.
+ * environment and drops only PASSTHROUGH_BLOCKED (`shadow` keeps CLAUDE_CODE_EFFORT_LEVEL: nothing is inserted to outrank), so CLAUDE_CODE_*, OTEL_* and MCP_* settings still apply.
  */
 const INHERITED = /^(ANTHROPIC_|CLAUDE|MCP_|OTEL_)/;
 const KEEP = new Set(['CLAUDE_CONFIG_DIR']);
@@ -43,13 +43,13 @@ export interface ChildEnv {
 
 export function childEnv(
   base: NodeJS.ProcessEnv = process.env,
-  opts: { connectors?: boolean; credentials?: ClaudeCredentials; passthrough?: boolean } = {},
+  opts: { connectors?: boolean; credentials?: ClaudeCredentials; passthrough?: boolean; shadow?: boolean } = {},
 ): ChildEnv {
   const env: Record<string, string> = {};
   for (const [k, v] of Object.entries(base)) {
     if (v === undefined) continue;
     if (ROUTER_SECRETS.has(k)) continue;
-    if (opts.passthrough ? PASSTHROUGH_BLOCKED.has(k) : INHERITED.test(k) && !KEEP.has(k)) continue;
+    if (opts.passthrough ? PASSTHROUGH_BLOCKED.has(k) && !(opts.shadow && k === 'CLAUDE_CODE_EFFORT_LEVEL') : INHERITED.test(k) && !KEEP.has(k)) continue;
     env[k] = v;
   }
 
