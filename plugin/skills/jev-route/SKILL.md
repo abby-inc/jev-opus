@@ -7,13 +7,13 @@ allowed-tools: Bash
 
 # Ask Jev for an effort decision
 
-This makes one Jev call and no Claude call. It uses the locally installed `jev-opus` when there is one, otherwise the version pinned in this skill (never `@latest`):
+Replace `<random>` with 12 fresh random hex characters, and check that the delimiter does not appear in the task text; a line equal to it would end the heredoc early and run the rest as shell. This makes one Jev call and no Claude call. It uses the locally installed `jev-opus` when there is one, otherwise the version pinned in this skill (never `@latest`):
 
 ```bash
 jev() { if command -v jev-opus >/dev/null 2>&1; then jev-opus "$@"; else npx -y github:abby-inc/jev-opus#v0.5.0-abby.1 "$@"; fi; }
-jev --route-only <<'JEV_TASK'
+jev --route-only <<'JEV_TASK_<random>'
 $ARGUMENTS
-JEV_TASK
+JEV_TASK_<random>
 ```
 
 Report the task type, difficulty, stakes, the chosen effort, and the reasons line. If `$ARGUMENTS` is empty, ask the user which task to classify.
