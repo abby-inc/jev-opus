@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.5.0-abby.2 - 2026-11-10
 
+- `jev-opus claude` pins `ANTHROPIC_DEFAULT_{OPUS,FABLE,SONNET}_MODEL`: behind the gateway's base URL Claude Code used its built-in alias map, so /model showed Fable 5.1 instead of 5.2.
 - Fable 5.2, Sonnet 5.5 and Haiku 5.5: the gateway lists them as "<model> · Jev" (`jev/claude-fable-5-2`, `jev/claude-sonnet-5-5`, `jev/claude-haiku-5-5`) next to "Opus 5.5 · Jev" in `/v1/models`, and `JEV_OPUS_MODEL` makes `jev-opus claude` select one of them in /model. All four accept `output_config.effort` low…max. Opus 5.5 stays the default.
 
 ## 0.5.0-abby.1 - 2026-10-08
